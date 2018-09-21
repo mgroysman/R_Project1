@@ -1,0 +1,85 @@
+---
+title: "Lab1"
+author: "Mikhail Groysman"
+date: "September 20, 2018"
+output: html_document
+---
+We are given the text file with chess tournament results. Let's load the file in R as fixed format file. We will drop first 4 rows (no useful info in these rows). We will combine 3 consequent rows into 1 row (rows 5, 6, and 7 will become row 1 in our dataframe)
+
+
+```{r}
+
+chess<-read.fwf(file="c://data/tournamentinfo.txt", skip=4, widths=list(c(-3,2,-2,33,-1,3,-6,2,-4,2,-4,2,-4,2,-4,2,-4,2,-4,2),c(-4,2,-17,4),c()),                col.names=c("Pnum","PlayerName","TotalNumberofPoints","g1","g2","g3","g4","g5","g6","g7","PlayerState","PlayerPreRating"),strip.white=TRUE,n=195)
+
+```
+
+Next step, we will create new DF containing only player number and its Elo score. We will rename columns to avoid confusion and errors
+
+```{r}
+
+PElo<-chess[c("Pnum","PlayerPreRating")]
+
+names(PElo)<-c("Pnum1","elo1")
+
+```
+
+We merge two DF's to add first's competetor Elo score to main DF. We repeat the process 6 more time to capture all competotors' Elo scores. Each iteration we will rename column for competotor's Elo score in xwalk DF (PElo). The process would need automation, but the step was skipped due to the lack of time
+
+```{r}
+
+chess<-merge(x=chess,y=PElo,by.x="g1",by.y="Pnum1",all.x=TRUE)
+
+names(PElo)[2]<-c("elo2")
+
+chess<-merge(x=chess,y=PElo,by.x="g2",by.y="Pnum1",all.x=TRUE)
+
+names(PElo)[2]<-c("elo3")
+
+chess<-merge(x=chess,y=PElo,by.x="g3",by.y="Pnum1",all.x=TRUE)
+
+names(PElo)[2]<-c("elo4")
+
+chess<-merge(x=chess,y=PElo,by.x="g4",by.y="Pnum1",all.x=TRUE)
+
+names(PElo)[2]<-c("elo5")
+
+chess<-merge(x=chess,y=PElo,by.x="g5",by.y="Pnum1",all.x=TRUE)
+
+names(PElo)[2]<-c("elo6")
+
+chess<-merge(x=chess,y=PElo,by.x="g6",by.y="Pnum1",all.x=TRUE)
+
+names(PElo)[2]<-c("elo7")
+
+chess<-merge(x=chess,y=PElo,by.x="g7",by.y="Pnum1",all.x=TRUE)
+
+```
+
+Let's sum competotors' ELo. And also let's count how many games were played. After we devide total competotors' Elo by number of games/competitors, we will get an average
+
+```{r}
+
+chess$TotElo<-rowSums(chess[,c("elo1", "elo2","elo3","elo4","elo5","elo6","elo7")], na.rm=TRUE)
+
+chess$TotGam<-7-rowSums(is.na(chess[,c("elo1", "elo2","elo3","elo4","elo5","elo6","elo7")]))
+
+chess$AvePreChessRatOpp<-round(chess$TotElo/chess$TotGam,0)
+
+```
+
+Now we will create final output. We will display it for review and check player one (Gary Hua), if it matches control results. The last step will be creating csv file.
+
+```{r}
+
+Output<-chess[c("PlayerName", "PlayerState", "TotalNumberofPoints", "PlayerPreRating", "AvePreChessRatOpp")]
+
+Output
+
+subset(Output, PlayerName=="GARY HUA" )
+
+write.csv(file="c://data/Output.csv", x=Output)
+
+```
+
+
+
